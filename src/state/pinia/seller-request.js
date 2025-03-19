@@ -1,0 +1,140 @@
+import { defineStore } from "pinia";
+import axios from "axios";
+
+export const useSellerRequestStore = defineStore("sellerRequest", {
+    state: () => ({
+        apiUrl: import.meta.env.VITE_APP_APIURL,
+        sellerRequests: [],
+        sellerRequest: null,
+        response: {
+            status: null,
+            message: null,
+            error: [],
+        },
+        modalAction: {
+            action: "",
+            modal_title: "",
+            modal_button: "",
+        },
+        totalData: 0,
+        current: 1,
+        perpage: 10,
+        searchQuery: "",
+    }),
+    actions: {
+        openForm(newAction, sellerRequest) {
+            this.modalAction.action = newAction;
+            this.sellerRequest = sellerRequest;
+        },
+        async getSellerRequests() {
+            try {
+                const url = `${this.apiUrl}/v1/request-sellers?page=${this.current}&perPage=${this.perpage}&name=${this.searchQuery}`;
+                const res = await axios.get(url);
+                const sellerRequestDataList = res.data.data;
+                this.sellerRequests = sellerRequestDataList;
+                this.totalData = res.data.meta.total;
+            } catch (error) {
+                this.response = {
+                    status: error.response?.status,
+                    message: error.message,
+                };
+            }
+        },
+        async getSellerRequest(id) {
+            try {
+                const res = await axios.get(
+                    `${this.apiUrl}/v1/request-sellers/${id}`
+                );
+                this.sellerRequest = res.data.data;
+            } catch (error) {
+                this.response = {
+                    status: error.response?.status,
+                    message: error.message,
+                };
+            }
+        },
+        async changePage(newPage) {
+            this.current = newPage;
+            await this.getSellerRequests();
+        },
+        async searchSellerRequests(query) {
+            this.searchQuery = query;
+            this.current = 1;
+            await this.getSellerRequests();
+        },
+        async addSellerRequest(sellerRequest) {
+            try {
+                const res = await axios.post(
+                    `${this.apiUrl}/v1/request-sellers`,
+                    sellerRequest
+                );
+                this.response = {
+                    status: res.status,
+                    message: res.data.message,
+                };
+            } catch (error) {
+                this.response = {
+                    status: error.response?.status,
+                    message: error.message,
+                    error: error.response.data.errors,
+                };
+            }
+        },
+        async updateSellerRequest(id, sellerRequest) {
+            try {
+                const res = await axios.put(
+                    `${this.apiUrl}/v1/request-sellers/${id}`,
+                    sellerRequest
+                );
+                this.response = {
+                    status: res.status,
+                    message: res.data.message,
+                };
+            } catch (error) {
+                this.response = {
+                    status: error.status,
+                    message: error.message,
+                    error: error.response.data.errors,
+                };
+            } finally {
+                this.getSellerRequests();
+            }
+        },
+        async deleteSellerRequest(id) {
+            try {
+                const res = await axios.delete(
+                    `${this.apiUrl}/v1/request-sellers/${id}`
+                );
+                this.response = {
+                    status: res.status,
+                    message: res.data.message,
+                };
+            } catch (error) {
+                this.response = {
+                    status: error.response?.status,
+                    message: error.message,
+                    error: error.response.data.errors,
+                };
+            } finally {
+                this.getSellerRequests();
+            }
+        },
+        resetState() {
+            this.sellerRequests = [];
+            this.sellerRequest = null;
+            this.response = {
+                status: null,
+                message: null,
+                error: [],
+            };
+            this.modalAction = {
+                action: "",
+                modal_title: "",
+                modal_button: "",
+            };
+            this.totalData = 0;
+            this.current = 1;
+            this.searchQuery = "";
+        },
+    },
+});
