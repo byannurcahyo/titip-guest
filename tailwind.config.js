@@ -9,6 +9,9 @@ export default {
     ],
     theme: {
         extend: {
+            fontFamily: {
+                caveat: ["Caveat", "cursive"],
+            },
             borderRadius: {
                 lg: "var(--radius)",
                 md: "calc(var(--radius) - 2px)",
